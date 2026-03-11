@@ -1,7 +1,7 @@
 name: GDACS Alerts to Slack Workflow
 on:
   schedule:
-    - cron: '*/15 * * * *'  # 15min
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 jobs:
   monitor:
@@ -11,7 +11,8 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-python@v5
-      with: {python-version: '3.12'}
+      with:
+        python-version: '3.12'
     - run: pip install requests
     - name: Check GDACS & trigger Slack
       env:
