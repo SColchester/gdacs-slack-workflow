@@ -47,3 +47,5 @@ if resp.status_code == 200:
         print(f"Triggered {new_count} new alerts")
 
 print("GDACS check complete")
+
+# Test
