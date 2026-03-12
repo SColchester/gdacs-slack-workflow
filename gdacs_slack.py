@@ -1,20 +1,43 @@
 import os
 import requests
+from datetime import datetime, timedelta
 
 SLACK_TRIGGER_URL = os.environ['SLACK_TRIGGER_URL']
+API_URL = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH'
+STATE_FILE = 'last_eventid.txt'
 
-# Dummy orange alert for Spain test
-payload = {
-    'event_name': 'Test Orange GDACS alert',
-    'country': 'PH',
-    'description': 'Manual test: Orange alert simulation.',
-    'event_id': 'TEST789',
-    'alert_level': 'orange'
-}
+def get_latest_eventid():
+    try:
+        with open(STATE_FILE, 'r') as f:
+            return int(f.read().strip())
+    except:
+        return 0
 
-resp = requests.post(SLACK_TRIGGER_URL, json=payload)
+def save_latest_eventid(eventid):
+    with open(STATE_FILE, 'w') as f:
+        f.write(str(eventid))
+
+params = {'alertlevel': 'orange;red', 'fromdate': (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')}
+resp = requests.get(API_URL, params=params)
+
+new_count = 0
 if resp.status_code == 200:
-    print("✅ Test alert posted to Slack Workflow!")
-else:
-    print(f"❌ Error: {resp.status_code} - {resp.text}")
-# Index fix
+    data = resp.json()
+    events = data.get('Events', [])
+    if events:
+        latest_id = max(int(e['EventId']) for e in events)
+        last_id = get_latest_eventid()
+        new_events = [e for e in events if int(e['EventId']) > last_id]
+        save_latest_eventid(latest_id)
+        for event in new_events:
+            payload = {
+                'event_name': event['Name'],
+                'country': event['Country'],
+                'description': event['Description'][:200],
+                'event_id': event['EventId'],
+                'alert_level': event['AlertLevel']
+            }
+            r = requests.post(SLACK_TRIGGER_URL, json=payload)
+            print(f"Posted {event['EventId']}: {r.status_code}")
+            new_count += 1
+print(f"Checked {len(events)} events, posted {new_count} new")
