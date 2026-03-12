@@ -41,3 +41,4 @@ if resp.status_code == 200:
             print(f"Posted {event['EventId']}: {r.status_code}")
             new_count += 1
 print(f"Checked {len(events)} events, posted {new_count} new")
+# Live test - ready for GDACS
