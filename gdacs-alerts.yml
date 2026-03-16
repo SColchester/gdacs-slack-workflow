@@ -1,6 +1,6 @@
 name: GDACS Alerts to Slack Workflow
 on:
-push:
+ push:
   branches: [ main ]
   schedule:
     - cron: '*/15 * * * *'
